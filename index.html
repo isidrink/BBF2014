@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title></title>
+        <meta charset="utf-8" />
+        <script src="cordova.js"></script>
+        <script src="Plugins/Child%20Browser/childbrowser.js"></script>
+        
+        <link href="kendo/styles/kendo.mobile.all.min.css" rel="stylesheet" />
+        <link href="kendo/styles/kendo.indexedlistview.css" rel="stylesheet" />
+        <link href="styles/main.css" rel="stylesheet" />
+        <style>
+          h2{font-size: 13px;}
+          h3, h2, p {font-family: Tahoma;}
+          :-moz-any(.km-content, .km-scroll-container, .km-scrollview){width:100%}
+          .km-touch-scrollbar{background-color: #ffffff}
+          .olControlAttribution{bottom: 0;margin-bottom: -100px;}
+          .beer_bg {
+                background: url("http://www.adapptalo.com/test/beerTexture.jpg") repeat-x scroll left top #FADE01;
+                min-height: 650px;
+                text-align: center;
+            }
+            .km-ios .km-view .km-content{background-color:transparent;background-image: none;}
+            #locate {position:absolute;z-index: 900;bottom: 0;height: 50px;}
+            #track {position:absolute;z-index: 9;bottom: 0;display: none;}         
+        </style>
+        <style type="text/css">
+            span.logo{background-image: url("http://www.barcelonabeerfestival.com/imatges2014/logo2014.png");}
+            #beer-view .km-ios ,#beer-view .km-insetcontent{background: url("http://www.sandpiperbeacon.com/thunderbeach/why-stay/beer.png")no-repeat center center fixed; 
+            -webkit-background-size: cover;
+            -moz-background-size: cover;
+            -o-background-size: cover;
+            background-size: cover;}
+            .item-list img, #details img{margin-top: -5px;background-color: whitesmoke}
+            #info {float:left;}
+            .km-list > li > img {height40px; width:40px;float:left; margin-right: 5px;}
+            /*#body { width: 300px; height: 450px; }*/
+
+        </style>
+        <style type="text/css">
+                .km-ios .km-list > li{font-size: 13px;background-image: url("http://demos.kendoui.com/content/shared/images/patterns/pattern8.png");}
+                .km-ios .km-group-title {
+                    background-image: -moz-linear-gradient(center top , rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.45) 6%, rgba(255, 255, 255, 0.2) 50%, rgba(255, 255, 255, 0.15) 50%, rgba(100, 100, 100, 0)), url("http://demos.kendoui.com/content/shared/images/patterns/pattern4.png");
+                    color: #974D2E;
+                    font-size: 1.4em;
+                    font-weight: normal;
+                }
+                .km-ios7 .km-list > li:last-child {
+                    box-shadow: 0 -1px 0 rgba(180, 180, 180, 0.5) inset;
+                }
+                #beers-view .km-listview .km-list {
+                    border-top-color: #dcbe87;
+                    background-image: url("http://demos.kendoui.com/content/shared/images/patterns/pattern8.png");
+                }
+                #beers-view .km-navbar, .km-wp-light #beers-view .km-navbar, .km-wp-dark #beers-view .km-navbar, #beers-view .km-content .km-button {
+                    background: url("http://demos.kendoui.com/content/shared/images/patterns/pattern9.png") repeat scroll 0 0 rgba(0, 0, 0, 0);
+                    color: #FFFFFF;
+                }
+                #custom-listview .item-title, #custom-listview .item-info {
+                    color: #4C2A1B;
+                }
+                #custom-listview .item-title {}
+                #custom-listview .item-info { color:#974D2E; }
+                #beers-view .km-listview .km-list{  background-color: #007ee9; border-top-color: #DCBE87;}
+                .item-list img, #details img {
+                    border-radius: 5px;
+                    box-shadow: 0 2px 3px #333333;
+                    float: left;
+                    height: 57px;
+                    margin-bottom: 3px;
+                    margin-left: 11px;
+                    margin-right: 1rem;
+                    width: 57px;
+                }
+                .item-list img, #details img {
+                    background-color: #F5F5F5;
+                    margin-top: 0px;
+                }
+
+        </style>
+        <script src="http://openlayers.org/dev/lib/OpenLayers.js" type="text/javascript"></script>
+        <script type="text/javascript">
+            //Sample code by August Li
+            var iconSize = new OpenLayers.Size(21, 25);
+            var iconOffset = new OpenLayers.Pixel(-(iconSize.w / 2), -iconSize.h);
+            var icon = new OpenLayers.Icon("http://www.openstreetmap.org/openlayers/img/marker.png",
+                           iconSize, iconOffset);
+             var iconSize2 = new OpenLayers.Size(49, 49);
+              var iconOffset2 = new OpenLayers.Pixel(-(iconSize2.w / 2), -iconSize2.h);
+           var icon2 = new OpenLayers.Icon("http://www.adapptalo.com/test/icon.png",
+                           iconSize2, iconOffset2);
+            var zoom, center, currentPopup, map, lyrMarkers;
+            var popupClass = OpenLayers.Class(OpenLayers.Popup.FramedCloud, {
+                "autoSize": true,
+                "minSize": new OpenLayers.Size(200, 50),
+                "maxSize": new OpenLayers.Size(400, 200),
+                "keepInMap": true
+            });
+            var bounds = new OpenLayers.Bounds();
+            function addMarker(lng, lat, info) {
+                var pt = new OpenLayers.LonLat(lng, lat)
+                                       .transform(new OpenLayers.Projection("EPSG:4326"), 
+                                       map.getProjectionObject());
+                bounds.extend(pt);
+                var feature = new OpenLayers.Feature(lyrMarkers, pt);
+                feature.closeBox = true;
+                feature.popupClass = popupClass;
+                feature.data.popupContentHTML = info;
+                feature.data.overflow = "auto";
+                var marker = new OpenLayers.Marker(pt, icon2.clone());
+                var markerClick = function(evt) {
+                    if (currentPopup != null && currentPopup.visible()) {
+                        currentPopup.hide();
+                    }
+                    if (this.popup == null) {
+                        this.popup = this.createPopup(this.closeBox);
+                        map.addPopup(this.popup);
+                        this.popup.show();
+                    } else {
+                        this.popup.toggle();
+                    }
+                    currentPopup = this.popup;
+                    OpenLayers.Event.stop(evt);
+                };
+                marker.events.register("mousedown", feature, markerClick);
+                lyrMarkers.addMarker(marker);
+            }
+            function initMap() {
+                var options = {
+                    projection: new OpenLayers.Projection("EPSG:900913"),
+                    displayProjection: new OpenLayers.Projection("EPSG:4326"),
+                    units: "m",
+                    numZoomLevels: 19,
+                    maxResolution: 156543.0339,
+                    maxExtent: new OpenLayers.Bounds(-20037508.34, -20037508.34, 20037508.34, 20037508.34)
+                };
+                map = new OpenLayers.Map("map", options);
+                map.addControl(new OpenLayers.Control.DragPan());
+                var lyrOsm = new OpenLayers.Layer.OSM();
+                map.addLayer(lyrOsm);
+                lyrMarkers = new OpenLayers.Layer.Markers("Markers");
+                map.addLayer(lyrMarkers);
+                 //add marker on given coordinates
+                //addMarker(2.149218,41.376293, '<b>Barcelona Beer Festival 2013</b><br/>LAS ARENAS');
+                center = bounds.getCenterLonLat();
+                map.setCenter(center, map.getZoomForExtent(bounds) - 1);
+                zoom = map.getZoom();
+                
+                
+                var style = {
+                fillColor: '#000',
+                fillOpacity: 0.1,
+                strokeWidth: 0
+            };
+
+             var layer = new OpenLayers.Layer.OSM( "Simple OSM Map");
+            var vector = new OpenLayers.Layer.Vector('vector');
+            map.addLayers([layer, vector]);
+            var lyrOsm = new OpenLayers.Layer.OSM();
+                map.addLayer(lyrOsm);
+                lyrMarkers = new OpenLayers.Layer.Markers("Markers");
+                map.addLayer(lyrMarkers);
+                addMarker(2.149218,41.376293, '<b>Barcelona Beer Festival 2014</b><br/>LAS ARENAS');
+                //addMarker(121.04931, 14.65105, '<b>Quezon Memorial Circle</b><br/>Philippines');
+                center = bounds.getCenterLonLat();
+                map.setCenter(center, map.getZoomForExtent(bounds) - 1);
+                zoom = map.getZoom();
+                
+           /* map.setCenter(
+                new OpenLayers.LonLat(-71.147, 42.472).transform(
+                    new OpenLayers.Projection("EPSG:4326"),
+                    map.getProjectionObject()
+                ), 12
+            );*/
+
+            var pulsate = function(feature) {
+                var point = feature.geometry.getCentroid(),
+                    bounds = feature.geometry.getBounds(),
+                    radius = Math.abs((bounds.right - bounds.left)/2),
+                    count = 0,
+                    grow = 'up';
+
+                var resize = function(){
+                    if (count>16) {
+                        clearInterval(window.resizeInterval);
+                    }
+                    var interval = radius * 0.03;
+                    var ratio = interval/radius;
+                    switch(count) {
+                        case 4:
+                        case 12:
+                            grow = 'down'; break;
+                        case 8:
+                            grow = 'up'; break;
+                    }
+                    if (grow!=='up') {
+                        ratio = - Math.abs(ratio);
+                    }
+                    feature.geometry.resize(1+ratio, point);
+                    vector.drawFeature(feature);
+                    count++;
+                };
+                window.resizeInterval = window.setInterval(resize, 50, point, radius);
+            };
+
+            var geolocate = new OpenLayers.Control.Geolocate({
+                bind: false,
+                geolocationOptions: {
+                    enableHighAccuracy: false,
+                    maximumAge: 0,
+                    timeout: 7000
+                }
+            });
+            map.addControl(geolocate);
+            var firstGeolocation = true;
+            geolocate.events.register("locationupdated",geolocate,function(e) {
+                vector.removeAllFeatures();
+                var circle = new OpenLayers.Feature.Vector(
+                    OpenLayers.Geometry.Polygon.createRegularPolygon(
+                        new OpenLayers.Geometry.Point(e.point.x, e.point.y),
+                        e.position.coords.accuracy/2,
+                        40,
+                        0
+                    ),
+                    {},
+                    style
+                );
+                    
+                    var points = [
+                        new OpenLayers.Geometry.Point(0, 0),
+                        new OpenLayers.Geometry.Point(0, 100),
+                        new OpenLayers.Geometry.Point(100, 100),
+                        new OpenLayers.Geometry.Point(100, 0)
+                    ];
+                    var ring = new OpenLayers.Geometry.LinearRing(points);
+                    var polygon = new OpenLayers.Geometry.Polygon([ring]);
+                  
+                  
+                vector.addFeatures([
+                    new OpenLayers.Feature.Vector(
+                        e.point,
+                        {},
+                        {
+                            graphicName: 'cross',
+                            strokeColor: '#f00',
+                            strokeWidth: 2,
+                            fillOpacity: 0,
+                            pointRadius: 10
+                        }
+                    ),
+                    circle
+                ]);
+                if (firstGeolocation) {
+                    map.zoomToExtent(vector.getDataExtent());
+                    pulsate(circle);
+                    firstGeolocation = false;
+                    this.bind = true;
+                }
+            });
+            geolocate.events.register("locationfailed",this,function() {
+                OpenLayers.Console.log('Location detection failed');
+            });
+                document.getElementById('locate').onclick = function() {
+                        vector.removeAllFeatures();
+                        geolocate.deactivate();
+                        document.getElementById('track').checked = false;
+                        geolocate.watch = false;
+                        firstGeolocation = true;
+                        geolocate.activate();
+                    };
+                    document.getElementById('track').onclick = function() {
+                        vector.removeAllFeatures();
+                        geolocate.deactivate();
+                        if (this.checked) {
+                            geolocate.watch = true;
+                            firstGeolocation = true;
+                            geolocate.activate();
+                        }
+                    };
+                    document.getElementById('track').checked = false;
+            }
+        </script>
+    </head>
+    <body id="body">
+
+         <!-- Beer Views -->
+         <div data-title="BeerList" data-role="view" id="beers-view" data-url="/" data-layout="beer-layout" data-model="app.artistsView.viewModel" >
+            <ul id="custom-listview" 
+                class="item-list"
+                data-role="indexedlistview" 
+                data-click="listViewClick" 
+                data-bind="source: beers" 
+                data-template="beers-list-template"
+
+                data-fixed-headers="true"
+
+            </ul>
+
+        </div>
+         <script id="beers-list-template" type="text/x-kendo-template">
+             <a href="\#beer-view?field=GenreId&operator=eq&value=#=B_Id#&title=#:encodeURIComponent(CERVESERA).replace("'", "%27")#">
+                <div class="beer-text">
+                    <img class="item-photo" src="Images/beers/${IMAGEN}" />
+                    <h3 style="margin-top:10px; margin-bottom:0px" class="item-title">#=CERVESERA#</h3>
+                    <p style="margin-top:0px; margin-bottom:10px" class="item-info">#=CERVESA#<br><i style="margin-top:0px;">Tipo:</i></p>
+                </div>
+                 <!-- <img class="item-photo" src="content/beers/${IMAGEN}" />#=CERVESERA#<br>#=CERVESA# -->
+             </a>
+         </script>
+       
+          <script id="beers-detail-template" type="text/x-kendo-template">
+                <div style="background-color: wheat;height: 300px" class="beer-details">
+                    <img class="item-photo" src="Images/beers/${IMAGEN}" />
+                    <h3 style="margin-top:10px; margin-bottom:0px" class="item-title">#=CERVESERA#</h3>
+                    <p style="margin-top:0px; margin-bottom:10px" class="item-info">#=CERVESA#<br><i style="margin-top:0px;">Tipo:</i></p>
+                </div>
+                 <!-- <img class="item-photo" src="content/beers/${IMAGEN}" />#=CERVESERA#<br>#=CERVESA# -->
+   
+         </script>
+         
+        <div data-role="layout" data-id="beer-layout" data-init="app.homeLayout.init" data-show="app.homeLayout.show">
+            <header data-role="header">
+                <div data-role="navbar">
+                    <span class="logo" data-role="view-title"></span>
+                </div>
+            </header>
+
+            <div data-role="footer">
+                <div data-role="tabstrip">
+                    <a href="#genres-view" data-icon="home">Home</a>
+                    <a href="#beers-view" data-icon="globe">BeerList</a>
+                    <a href="#search-view" data-icon="search">Search</a>
+                    <a href="#cart-view" data-icon="cart">Cart<span class="cart-badge km-badge" style="display: none;"></span></a>
+                    <a href="#account-view" data-icon="contacts">Account</a>
+                    <a href="#about-view" data-icon="about">About</a>
+                </div>
+            </div>
+        </div>
+        
+        <div data-role="view" id="beer-view" data-layout="base-layout" data-model="app.albumsView.viewModel" data-show="app.albumsView.show" data-transition="slide:left" style="display: none;">
+            <header data-role="header">
+                <div data-role="navbar">
+                    <a class="nav-button" data-align="left" data-role="backbutton">Back</a>
+                    <span data-role="view-title"></span>
+                </div>
+            </header>
+
+            <ul id="beer-detail" data-role="listview" data-bind="source: beers" data-auto-bind="false" data-template="beers-detail-template" data-style="inset" data-endless-scroll="true"></ul>
+        </div>
+        <!-- Home Views -->
+
+        <div data-role="view" id="genres-view" data-layout="home-layout" data-title="Albums" data-model="app.genresView.viewModel" data-show="app.genresView.onShow">
+            <ul data-role="listview" data-bind="source: genres" data-template="genre-list-template", data-style="inset"></ul>
+        </div>
+
+        <div data-role="view" id="artists-view" data-layout="home-layout" data-title="Albums" data-model="app.artistsView.viewModel" class="km-insetcontent" style="display: none;">
+            <ul data-role="indexedlistview" data-bind="source: artists" data-template="artist-list-template" data-fixed-headers="true"></ul>
+        </div>
+        
+        <div data-role="view" id="albums-view" data-layout="base-layout" data-model="app.albumsView.viewModel" data-show="app.albumsView.show" data-transition="slide:left" style="display: none;">
+            <header data-role="header">
+                <div data-role="navbar">
+                    <a class="nav-button" data-align="left" data-role="backbutton">Back</a>
+                    <span data-role="view-title"></span>
+                </div>
+            </header>
+
+            <ul id="albums-listview" data-role="listview" data-bind="source: albums" data-auto-bind="false" data-template="album-list-template" data-style="inset" data-endless-scroll="true"></ul>
+        </div>
+
+        <div data-role="layout" data-id="home-layout" data-init="app.homeLayout.init" data-show="app.homeLayout.show">
+            <header data-role="header">
+                <div data-role="navbar">
+                    <span data-role="view-title"></span>
+                </div>
+                <ul class="select-group">
+                    <li data-target="#genres-view">Genres</li>
+                    <li data-target="#artists-view">Artists</li>
+                </ul>
+            </header>
+
+            <div data-role="footer">
+                <div data-role="tabstrip">
+                    <a href="#genres-view" data-icon="home">Home</a>
+                    <a href="#beers-view" data-icon="globe">BeerList</a>
+                    <a href="#search-view" data-icon="search">Search</a>
+                    <a href="#cart-view" data-icon="cart">Cart<span class="cart-badge km-badge" style="display: none;"></span></a>
+                    <a href="#account-view" data-icon="contacts">Account</a>
+                    <a href="#about-view" data-icon="about">About</a>
+                </div>
+            </div>
+        </div>
+
+        <div data-role="layout" data-id="home-layout" data-init="app.homeLayout.init" data-show="app.homeLayout.show" data-platform="android">
+            <div data-role="header">
+                <div data-role="navbar">
+                    <div class="app-icon" data-align="left"></div>
+                    <span data-role="view-title"></span>
+                    <div data-align="right" class="action-buttons">
+                        <a data-role="button" href="#search-view" data-icon="search"></a>
+                        <a data-role="button" href="#cart-view" data-icon="cart"></a>
+                        <a data-role="button" href="#popover-action-overflow" data-rel="popover" data-icon="action-overflow"></a>
+                    </div>
+                </div>
+                <div data-role="tabstrip">
+                    <a href="#genres-view">Genres</a>
+                    <a href="#artists-view">Artists</a>
+                </div>
+            </div>
+
+            <div data-role="popover" id="popover-action-overflow" data-popup='{"height": 110, "width": 125}'>
+                <div data-role="view" data-title="People">
+                    <ul data-role="listview" data-click="app.homeLayout.navigate">
+                        <li data-target="#account-view">Account</li>
+                        <li data-target="#about-view">About</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Search Views -->
+
+        <div data-role="view" id="search-view" data-layout="search-layout" data-title="Search" data-init="app.searchView.init" data-show="app.searchView.show" style="display: none;">
+            <ul id="search-listview" data-role="listview" data-bind="source: results" data-template="album-list-template" data-style="inset" data-endless-scroll="true" data-auto-bind="false"></ul>
+        </div>
+
+        <div data-role="layout" data-id="search-layout" data-show="app.baseLayout.show">
+            <header data-role="header">
+                <div data-role="navbar">
+                    <span data-role="view-title"></span>
+                </div>
+                <div class="search-container">
+                    <input type="text" class="search-text" placeholder="Album title or artist" />
+                    <a data-role="button" data-icon="search" data-click="app.searchView.submitSearch"></a>
+                </div>
+            </header>
+            <div data-role="footer">
+                <div data-role="tabstrip">
+                    <a href="#genres-view" data-icon="home">Home</a>
+                    <a href="#beers-view" data-icon="globe">BeerList</a>
+                    <a href="#search-view" data-icon="search">Search</a>
+                    <a href="#cart-view" data-icon="cart">Cart<span class="cart-badge km-badge" style="display: none;"></span></a>
+                    <a href="#account-view" data-icon="contacts">Account</a>
+                    <a href="#about-view" data-icon="about">About</a>
+                </div>
+            </div>
+        </div>
+
+        <div data-role="layout" data-id="search-layout" data-platform="android" data-show="app.baseLayout.show">
+            <header data-role="header">
+                <div data-role="navbar">
+                    <a class="nav-button" data-align="left" data-role="backbutton"></a>
+                    <input type="text" class="search-text" placeholder="Album title or artist" />
+                    <div data-align="right" class="action-buttons">
+                        <a data-role="button" data-icon="search" data-click="app.searchView.submitSearch"></a>
+                    </div>
+                </div>
+            </header>
+        </div>
+
+
+        <!-- Cart Checkout Views -->
+
+        <div data-role="view" id="cart-view" data-layout="cart-layout" data-title="Cart" data-model="app.cartView.viewModel" data-init="app.cartView.init" style="display: none;">
+            <header data-role="header" class="cart-header">
+                <div data-role="navbar">
+                    <a class="nav-button" data-align="left" data-role="backbutton" data-bind="visible: isAndroid"></a>
+                    <span data-role="view-title"></span>
+                    <a data-role="button" href="#checkout-view" data-align="right" data-bind="visible: cartHasItems">Checkout</a>
+                </div>
+                <h3>Swipe to Remove Item</h3>
+                <h1>TOTAL: <span class="total" data-bind="text: cart.aggregates.formattedTotal"></span></h1>
+            </header>
+
+            <ul data-role="listview" data-bind="source: items" data-template="cart-list-template" data-style="inset"></ul>
+        </div>
+        
+        <div data-role="view" id="checkout-view" data-layout="base-layout" data-title="Checkout" data-model="app.checkoutView.viewModel" data-before-show="app.checkoutView.beforeShow" data-transition="slide:left" style="display: none;">
+            <header data-role="header">
+                <div data-role="navbar">
+                    <a class="nav-button" data-align="left" data-role="backbutton">Cart</a>
+                    <span data-role="view-title"></span>
+                    <div data-role="button" data-align="right" data-bind="click: submit">Submit</div>
+                </div>
+            </header>
+            
+            <section class="validate" data-role="validator">
+                <ul data-role="listview">
+                    <li>
+                        First Name
+                        <input type="text" name="firstName" placeholder="First Name" data-bind="value: firstName" pattern=".{0,160}" required validationmessage="Required" />
+                    </li>
+                    <li>
+                        Last Name
+                        <input type="text" name="lastName" placeholder="Last Name" data-bind="value: lastName" pattern=".{0,160}" required validationmessage="Required" />
+                    </li>
+                    <li>
+                        Address
+                        <input type="text" name="address" placeholder="Address" data-bind="value: address" pattern=".{3,70}" required validationmessage="Required" />
+                    </li>
+                    <li>
+                        City
+                        <input type="text" name="city" placeholder="City" data-bind="value: city" pattern=".{0,40}" required validationmessage="Required"/>
+                    </li>
+                    <li>
+                        State
+                        <input type="text" name="state" placeholder="State" data-bind="value: state" pattern=".{0,40}" required validationmessage="Required"/>
+                    </li>
+                    <li>
+                        Postal Code
+                        <input type="text" name="zip" placeholder="Postal Code" data-bind="value: zip" pattern=".{5,10}" required validationmessage="Required"/>
+                    </li>
+                    <li>
+                        Country
+                        <input type="text" name="country" placeholder="Country" data-bind="value: country" pattern=".{0,40}" required validationmessage="Required"/>
+                    </li>
+                    <li>
+                        Phone
+                        <input type="text" name="phone" placeholder="Phone" data-bind="value: phone" pattern=".{0,24}" required validationmessage="Required"/>
+                    </li>
+                    <li>
+                        Email
+                        <input type="text" name="email" placeholder="Email Address" data-bind="value: email" pattern=".+@.+\..{2,}" required validationmessage="Required"/>
+                    </li>
+                </ul>
+            </section>
+        </div>
+
+        <div data-role="view" id="checkout-complete-view" data-layout="checkout-complete-layout" data-title="Order Complete" data-model="app.checkoutView.viewModel" data-transition="slide:left" style="display: none;">
+            <h1 class="thank-you">Thank You!</h1>
+        </div>
+
+        <div data-role="layout" data-id="cart-layout" data-show="app.cartView.layoutShow" data-platform="ios">
+            <div data-role="footer">
+                <div data-role="tabstrip">
+                    <a href="#genres-view" data-icon="home">Home</a>
+                    <a href="#beers-view" data-icon="globe">BeerList</a>
+                    <a href="#search-view" data-icon="search">Search</a>
+                    <a href="#cart-view" data-icon="cart">Cart<span class="cart-badge km-badge" style="display: none;"></span></a>
+                    <a href="#account-view" data-icon="contacts">Account</a>
+                    <a href="#about-view" data-icon="about">About</a>
+                </div>
+            </div>
+        </div>
+
+        <div data-role="layout" data-id="checkout-complete-layout" data-show="app.baseLayout.show">
+            <header data-role="header">
+                <div data-role="navbar">
+                    <span data-role="view-title"></span>
+                </div>
+            </header>
+
+            <div data-role="footer">
+                <div data-role="tabstrip">
+                    <a href="#genres-view" data-icon="home">Home</a>
+                    <a href="#beers-view" data-icon="globe">BeerList</a>
+                    <a href="#search-view" data-icon="search">Search</a>
+                    <a href="#cart-view" data-icon="cart">Cart<span class="cart-badge km-badge" style="display: none;"></span></a>
+                    <a href="#account-view" data-icon="contacts">Account</a>
+                    <a href="#about-view" data-icon="about">About</a>
+                </div>
+            </div>
+        </div>
+
+        <div data-role="layout" data-id="checkout-complete-layout" data-show="app.baseLayout.show" data-platform="android">
+            <header data-role="header">
+                <div data-role="navbar">
+                    <div class="app-icon" data-align="left"></div>
+                    <span data-role="view-title"></span>
+                    <div data-align="right" class="action-buttons">
+                        <a data-role="button" href="#home-view" data-icon="home"></a>
+                    </div>
+                </div>
+            </header>
+        </div>
+
+
+        <!-- Account Views -->
+
+        <div data-role="view" id="account-view" data-layout="account-layout" data-title="Account" style="display: none;" data-model="app.accountView.viewModel" data-before-show="app.accountView.beforeShow" data-show="app.accountView.accountViewShow">
+            <ul id="order-history-list" class="order-history-list"></ul>
+        </div>
+
+        <div data-role="view" id="login-view" data-layout="base-layout" data-title="Log In" style="display: none;" data-model="app.accountView.viewModel" data-init="app.accountView.loginInit">
+            <p>For demonstration purposes you can register a new username, or use:</p>
+            <ul>
+                <li><strong>Username:</strong> owner</li>
+                <li><strong>Password:</strong> p@ssword123</li>
+            </ul>
+
+            <input type="text" placeholder="Username" data-bind="value: loginUsername" />
+            <input type="password" placeholder="Password" data-bind="value: loginPassword" />
+            <div type="button" data-role="button" data-bind="click: login">Log In</div>
+            <a href="#register-view" data-role="button">Register</a>
+        </div>
+        
+        <div data-role="view" id="register-view" data-layout="base-layout" data-title="Create Account" style="display: none;" data-model="app.accountView.viewModel">
+            <input type="text" placeholder="Username" data-bind="value: registerUsername" />
+            <input type="password" placeholder="Password" data-bind="value: registerPassword" />
+            <input type="password" placeholder="Confirm Password" data-bind="value: registerPasswordRetyped" />
+            <input type="button" data-role="button" value="Register" data-bind="click: register" />
+        </div>
+
+        <div data-role="layout" data-id="account-layout" data-show="app.accountView.layoutShow">
+            <header data-role="header">
+                <div data-role="navbar">
+                    <span data-role="view-title"></span>
+                    <span data-role="button" data-bind="click: logout" data-align="right">Log Off</span>
+                </div>
+                <h2><span data-bind="text: userName" class="user-name"></span>'s Order History</h2>
+            </header>
+            <div data-role="footer">
+                <div data-role="tabstrip">
+                    <a href="#genres-view" data-icon="home">Home</a>
+                    <a href="#beers-view" data-icon="globe">BeerList</a>
+                    <a href="#search-view" data-icon="search">Search</a>
+                    <a href="#cart-view" data-icon="cart">Cart<span class="cart-badge km-badge" style="display: none;"></span></a>
+                    <a href="#account-view" data-icon="contacts">Account</a>
+                    <a href="#about-view" data-icon="about">About</a>
+                </div>
+            </div>
+
+            <div data-role="popover" id="popover-account-overflow" data-popup='{"height": 55, "width": 125}'>
+                <div data-role="view" data-title="People">
+                    <ul data-role="listview" data-click="app.accountView.action">
+                        <li data-action="logout">Log Off</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div data-role="layout" data-id="account-layout" data-show="app.accountView.layoutShow" data-platform="android">
+            <header data-role="header">
+                <div data-role="navbar">
+                    <a class="nav-button" data-align="left" data-role="backbutton"></a>
+                    <span data-role="view-title"></span>
+                    <div data-align="right" class="action-buttons">
+                        <a data-role="button" href="#popover-account-overflow" data-rel="popover" data-icon="action-overflow"></a>
+                    </div>
+                </div>
+                <h2><span data-bind="text: userName" class="user-name"></span>'s Order History</h2>
+            </header>
+        </div>
+
+
+        <!-- About Views -->
+
+        <div data-role="view" id="about-view" data-layout="about-layout" data-title="About" data-show="initMap" data-stretch="true" data-model="app.aboutView.viewModel" style="display: none;">
+            <img style="position:fixed; left: 20%;z-index: 99"src="http://www.barcelonabeerfestival.com/imatges2014/logo2014.png"/>
+            <!--<h1>8,9 i 10<br>Març 2014</h1>
+            <p>CÚPULA LAS ARENAS</p>-->
+                    
+            <div id="mapwrap" data-role="content">
+                <div id="map" class="smallmap">
+                <button id="locate">Localizame!!</button>
+                <input type="checkbox" name="track" id="track"></div>
+            </div>
+            <div id="info" style="height: 30px;text-align: center; /*background-color: #ff0000;*/display:none;">
+                    <h2 class="item-title">8,9 i 10</h3>
+                    <h3 class="item-title">Mar� 2014</h3>
+                   <p class="item-info">C�PULA LAS ARENAS</p>
+            </div>
+            
+
+        </div>
+
+        <div data-role="layout" data-id="about-layout" data-show="app.baseLayout.show">
+            <div data-role="footer">
+                <div data-role="tabstrip">
+                    <a href="#genres-view" data-icon="home">Home</a>
+                    <a href="#beers-view" data-icon="globe">BeerList</a>
+                    <a href="#search-view" data-icon="search">Search</a>
+                    <a href="#cart-view" data-icon="cart">Cart<span class="cart-badge km-badge" style="display: none;"></span></a>
+                    <a href="#account-view" data-icon="contacts">Account</a>
+                    <a href="#about-view" data-icon="about">About</a>
+                </div>
+            </div>
+        </div>
+
+        <div data-role="layout" data-id="about-layout" data-platform="android" data-show="app.baseLayout.show">
+            <header data-role="header">
+                <div data-role="navbar">
+                    <a href="#genres-view" class="nav-button" data-align="left" data-role="backbutton"></a>
+                    <span data-role="view-title"></span>
+                    <div data-align="right" class="action-buttons">
+                        <a data-role="button" href="#home-view" data-icon="home"></a>
+                    </div>
+                </div>
+            </header>
+        </div>
+
+
+        <!-- Error Views -->
+
+        <div data-role="modalview" id="error-view" style="display: none; width: 95%; height: 90%;">
+            <div data-role="header">
+                <div data-role="navbar">
+                    <span>Error</span>
+                    <a data-click="app.closeErrorModal" data-role="button" data-align="right">Close</a>
+                </div>
+            </div>
+            
+            <div class="message"></div>
+        </div>
+
+
+        <!-- Shared Layouts -->
+
+        <div data-role="layout" data-id="base-layout" data-show="app.baseLayout.show">
+            <div data-role="footer">
+                <div data-role="tabstrip">
+                    <a href="#genres-view" data-icon="home">Home</a>
+                    <a href="#beers-view" data-icon="globe">BeerList</a>
+                    <a href="#search-view" data-icon="search">Search</a>
+                    <a href="#cart-view" data-icon="cart">Cart<span class="cart-badge km-badge" style="display: none;"></span></a>
+                    <a href="#account-view" data-icon="contacts">Account</a>
+                    <a href="#about-view" data-icon="about">About</a>
+                </div>
+            </div>
+        </div>
+
+        <div data-role="layout" data-id="base-layout" data-show="app.baseLayout.show" data-platform="android">
+            <header data-role="header">
+                <div data-role="navbar">
+                    <a class="nav-button" data-align="left" data-role="backbutton"></a>
+                    <span data-role="view-title"></span>
+                </div>
+            </header>
+        </div>
+
+
+        <!-- Templates -->
+
+        <script id="genre-list-template" type="text/x-kendo-template">
+            <a href="\#albums-view?field=GenreId&operator=eq&value=#=GenreId#&title=#:encodeURIComponent(Name).replace("'", "%27")#">#=Name#</a>
+        </script>
+
+        <script id="artist-list-template" type="text/x-kendo-template">
+            <a href="\#albums-view?field=ArtistId&operator=eq&value=#=ArtistId#&title=#:encodeURIComponent(Name).replace("'", "%27")#">#=Name#</a>
+        </script>
+
+        <script id="album-list-template" type="text/x-kendo-template">
+            <img class="album-art" data-bind="attr: {src: albumArtUrl}" />
+            <div class="album-cart" data-role="button" data-bind="click: onAddToCart"><span data-bind="text: qtyInCart, attr: {class: buttonClasses}"></span><span class="km-icon km-cart"></span></div>
+            <h1 class="album-title" data-bind="text: Title"></h1>
+            <h2 class="album-artist" data-bind="text: Artist.Name"></h2>
+            <span class="album-price" data-bind="text: albumPrice"></span>
+        </script>
+
+        <script id="artist-filter-template" type="text/x-kendo-template">
+            <a href="\#artists-view?value=#=data#" id="#=data#">#=data#</a>
+        </script>
+
+        <script id="cart-list-template" type="text/x-kendo-template">
+            <div data-role="touch" data-enable-swipe="1" data-swipe="app.cartView.onToggleDeleteMode" data-hold="app.cartView.onToggleDeleteMode">
+                <div class="qty-and-price">
+                    <strong data-bind="invisible: deleteMode">Qty</strong>
+                    <input type="number" data-bind="value: qty, invisible: deleteMode" min="1" max="99" />
+                    <span class="cart-delete-button" data-role="button" data-click="app.cartView.onRemove" data-bind="visible: deleteMode" data-icon="trash"></span>
+                </div>
+                <img class="album-art" data-bind="attr: {src: albumArtUrl}" />
+                <h1 class="album-title" data-bind="text: album.Title"></h1>
+                <h2 class="album-artist" data-bind="text: album.Artist.Name"></h2>
+                <span class="album-price" data-bind="text: albumPrice"></span>
+                <div class="subtotal">Subtotal: <span data-bind="text: albumSubtotal"></span></div>
+            </div>
+        </script>
+
+        <script id="order-history-header-template" type="text/x-kendo-template">
+            <span>Order\# #=data.items[0].OrderId#</span>
+            <span>#=app.accountView.calcOrderTotal(data.items)#</span>
+            <span>#=kendo.toString(data.items[0].OrderDate, "g")#</span>
+        </script>
+
+        <script id="order-history-template" type="text/x-kendo-template">
+            <div>#=Title#</div>
+            <div>#=Quantity# at #=kendo.toString(UnitPrice, "c")# each</div>
+        </script>
+
+
+        <!-- Scripts -->
+
+        <script data-main="scripts/main.js" src="scripts/require.js"></script>
+    </body>
+</html>
