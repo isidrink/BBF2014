@@ -285,7 +285,7 @@
 
          <!-- Beer Views -->
          <div data-title="BeerList" data-role="view" id="beers-view" data-url="/" data-layout="beer-layout" data-model="app.artistsView.viewModel" >
-            <ul id="custom-listview" 
+            <!--<ul id="custom-listview" 
                 class="item-list"
                 data-role="indexedlistview" 
                 data-click="listViewClick" 
@@ -294,7 +294,8 @@
 
                 data-fixed-headers="true"
 
-            </ul>
+            </ul>-->
+<ul data-role="indexedlistview" data-bind="source: beers" data-template="beers-list-template" data-fixed-headers="true"></ul>
 
         </div>
          <script id="beers-list-template" type="text/x-kendo-template">
