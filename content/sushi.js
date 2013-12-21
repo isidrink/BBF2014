@@ -91,6 +91,7 @@
     function showBeerView(e) {
        //alert("showBeerView entra!!");
        viewModel.beers.filter([]);
+       viewModel.beers.group({field: "CERVESERA"});
     }
     function showMenuView() {
         viewModel.dataSource.filter([]);
