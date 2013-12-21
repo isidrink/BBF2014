@@ -89,8 +89,8 @@
         viewModel.dataSource.filter({ field: "featured", operator: "eq", value: true});
     }
     function showBeerView(e) {
-       alert("showBeerView entra!!");
-       //viewModel.dataSource.group([]);
+       //alert("showBeerView entra!!");
+       viewModel.beers.filter([]);
     }
     function showMenuView() {
         viewModel.dataSource.filter([]);
