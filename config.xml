@@ -6,14 +6,14 @@
         id        = "com.tricedesigns.PGLegends"
         version   = "1.0.0">
 
-    <name>Legends</name>
+    <name>BBF2014</name>
 
     <description>
-        PhoneGap Legends is a fantasy/RPG themed demo that leverages HTML DOM animation techniques and targets webkit browsers.
+        App Description
     </description>
 
-    <author href="http://tricedesigns.com" email="atrice@adobe.com">
-        Andrew Trice
+    <author href="http://adapptalo.com" email="info@adapptalo.com">
+        Isidro Escoda
     </author>
 
     <!--
