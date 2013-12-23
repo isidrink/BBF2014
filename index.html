@@ -15,8 +15,26 @@
 	</head>
 
 	<body>
-        
-        <div data-role="view" id="artists-view" data-title="Albums" data-model="viewModel" class="km-insetcontent">
+            
+        <div data-role="layout" data-id="beerdefault">
+            <header data-role="header">
+            <div data-role="navbar">
+                <span data-role="view-title"></span>
+                <!-- <a class="about-button" data-align="right" href="content/about.html" data-role="button">About</a>-->
+            </div>
+            </header>
+
+            <footer data-role="footer" data-id="beerdefault">
+            <div data-role="tabstrip">
+                <a href="#beers-view" data-icon="home">Home</a>
+                <a href="#beerwish-view" data-icon="organize">BeerWish</a>
+                <a href="#cart" data-icon="cart">Sponsors</a>
+                <a href="#account" data-icon="contacts">Account</a>
+            </div>
+            </footer>
+        </div>
+            
+        <div data-role="view"  data-layout="beerdefault" id="artists-view" data-title="Albums" data-model="viewModel" class="km-insetcontent">
                 <ul data-role="indexedlistview" data-bind="source: beers" data-template="artist-list-template" data-fixed-headers="true"></ul>
         </div>
 
