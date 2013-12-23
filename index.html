@@ -27,15 +27,15 @@
 
             <footer data-role="footer" data-id="beerdefault">
             <div data-role="tabstrip">
-                <a href="#beers-view" data-icon="home">Home</a>
-                <a href="#beerwish-view" data-icon="organize">BeerWish</a>
-                <a href="#cart" data-icon="cart">Sponsors</a>
-                <a href="#account" data-icon="contacts">Account</a>
+                <a href="#beers-view" data-icon="home">BeerList</a>
+                <a href="#share-view" data-icon="organize">BeerWish</a>
+                <a href="#sponsor-view" data-icon="cart">Sponsors</a>
+                <a href="#about-view" data-icon="contacts">About</a>
             </div>
             </footer>
         </div>
             
-        <div data-role="view"  data-layout="beerdefault" id="artists-view" data-title="Beers" data-model="viewModel" class="km-insetcontent">
+        <div data-role="view"  data-layout="beerdefault" id="artists-view" data-title="BeerList" data-model="viewModel" class="km-insetcontent">
                 <ul data-role="indexedlistview" data-bind="source: beers" data-template="artist-list-template" data-fixed-headers="true"></ul>
         </div>
 
@@ -44,7 +44,15 @@
                     #=CERVESERA# <i> #=CERVESA#</i>
         </script>
 
-
+        <div data-role="view"  data-layout="beerdefault" id="share-view" data-title="ShareBeers" data-model="viewModel" class="km-insetcontent">
+            <h1>SHARE VIEW</h1>
+        </div>
+        <div data-role="view"  data-layout="beerdefault" id="sponsor-view" data-title="Sponsors" data-model="viewModel" class="km-insetcontent">
+               <h1>SPONSORS VIEW</h1>
+        </div>
+        <div data-role="view"  data-layout="beerdefault" id="about-view" data-title="About" data-model="viewModel" class="km-insetcontent">
+                <h1>ABOUT VIEW</h1>
+        </div>
         <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
 		<script src="http://cdn.kendostatic.com/2013.1.319/js/kendo.mobile.min.js"></script>
 		<script src="kendo.indexedlistview.js"></script>
