@@ -2,7 +2,7 @@
 
 <html>
 	<head>
-		<meta http-equiv="Content-type">
+		<meta http-equiv="Content-type" content="text/html; charset=utf-8">
 		<title>BBF2014</title>
 
         <link href="http://cdn.kendostatic.com/2013.1.319/styles/kendo.mobile.all.min.css" rel="stylesheet" />
@@ -11,6 +11,7 @@
         <style type="text/css">
             body.km-root > p { margin: 20px; }
 	    #body { width: 300px; height: 450px; }
+            .item-photo{width: 30px;}
         </style>
 	</head>
 
@@ -34,19 +35,13 @@
             </footer>
         </div>
             
-        <div data-role="view"  data-layout="beerdefault" id="artists-view" data-title="Albums" data-model="viewModel" class="km-insetcontent">
+        <div data-role="view"  data-layout="beerdefault" id="artists-view" data-title="Beers" data-model="viewModel" class="km-insetcontent">
                 <ul data-role="indexedlistview" data-bind="source: beers" data-template="artist-list-template" data-fixed-headers="true"></ul>
         </div>
 
         <script id="artist-list-template" type="text/x-kendo-template">
-               <a href="\#stretchview?B_Id=#: B_Id #">
-               <!--<span class="date">#: IMAGEN#</span>-->
-               <div class="beer-text">
-                    <img class="item-photo" src="beers/${IMAGEN}" />
-                    <h3 class="item-title">#: CERVESERA #</h3>
-                    <p class="item-info">#: CERVESA #</p>
-               </div>
-            </a>
+                <img class="item-photo" src="beers/${IMAGEN}" />
+                    #=CERVESERA# <i> #=CERVESA#</i>
         </script>
 
 
